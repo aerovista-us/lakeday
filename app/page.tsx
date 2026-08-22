@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { lakePlaces } from "@/data/places";
 import { trackEvent } from "@/lib/analytics";
 import { Activity, LakeConditions, recommendLakeDay } from "@/lib/recommendation";
 
@@ -23,11 +24,17 @@ function formatTime(value: string | null | undefined) {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(date);
+  return new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", minute: "2-digit" }).format(date);
 }
 
 function value(value: number | null | undefined, suffix = "") {
   return value == null || !Number.isFinite(value) ? "—" : `${Math.round(value)}${suffix}`;
+}
+
+function placeType(type: string) {
+  if (type === "boat-launch") return "Boat launch";
+  if (type === "paddle-launch") return "Paddle + swim";
+  return "Beach + swim";
 }
 
 export default function Home() {
@@ -89,10 +96,7 @@ export default function Home() {
       <header className="topbar">
         <div className="brand-lockup">
           <div className="brand-mark">LD</div>
-          <div>
-            <strong>Lake Day</strong>
-            <span>Lake Coeur d&apos;Alene · live conditions</span>
-          </div>
+          <div><strong>Lake Day</strong><span>Lake Coeur d&apos;Alene · live conditions</span></div>
         </div>
         <button className="ghost-button" onClick={load} disabled={loading}>{loading ? "Refreshing…" : "Refresh"}</button>
       </header>
@@ -105,11 +109,7 @@ export default function Home() {
 
       <section className="activity-strip" aria-label="Lake activity">
         {activities.map((item) => (
-          <button
-            key={item.id}
-            className={`activity ${activity === item.id ? "active" : ""}`}
-            onClick={() => chooseActivity(item.id)}
-          >
+          <button key={item.id} className={`activity ${activity === item.id ? "active" : ""}`} onClick={() => chooseActivity(item.id)}>
             <span>{item.icon}</span>{item.label}
           </button>
         ))}
@@ -129,22 +129,12 @@ export default function Home() {
         <>
           <section className={`verdict-card verdict-${recommendation.verdict.toLowerCase().replace(" ", "-")}`}>
             <div className="verdict-row">
-              <div>
-                <p className="mini-label">FOR {activity.toUpperCase()}</p>
-                <h2>{recommendation.verdict}</h2>
-              </div>
-              <div className="score-ring" aria-label={`Lake Day score ${recommendation.score} out of 100`}>
-                <strong>{recommendation.score}</strong><span>/100</span>
-              </div>
+              <div><p className="mini-label">FOR {activity.toUpperCase()}</p><h2>{recommendation.verdict}</h2></div>
+              <div className="score-ring" aria-label={`Lake Day score ${recommendation.score} out of 100`}><strong>{recommendation.score}</strong><span>/100</span></div>
             </div>
             <h3>{recommendation.headline}</h3>
-            <div className="reason-list">
-              {recommendation.reasons.slice(0, 5).map((reason) => <p key={reason}>✓ {reason}</p>)}
-            </div>
-            <div className="hero-actions">
-              <button className="primary-button" onClick={share}>Share this call</button>
-              <a className="secondary-button" href="#conditions">See conditions</a>
-            </div>
+            <div className="reason-list">{recommendation.reasons.slice(0, 5).map((reason) => <p key={reason}>✓ {reason}</p>)}</div>
+            <div className="hero-actions"><button className="primary-button" onClick={share}>Share this call</button><a className="secondary-button" href="#conditions">See conditions</a></div>
           </section>
 
           <section className="section" id="conditions">
@@ -161,14 +151,36 @@ export default function Home() {
         </>
       ) : null}
 
+      <section className="section" id="places">
+        <div className="section-heading"><div><p className="eyebrow">VERIFIED LOCAL PLACES</p><h2>Where to get on the water</h2></div><span className="verified">City of Coeur d&apos;Alene sources</span></div>
+        <div className="place-grid">
+          {lakePlaces.map((place) => (
+            <article className="place-card" key={place.id}>
+              <p className="place-type">{placeType(place.type)}</p>
+              <h3>{place.name}</h3>
+              <p>{place.summary}</p>
+              <ul>{place.notes.slice(0, 2).map((note) => <li key={note}>{note}</li>)}</ul>
+              <div className="event-actions">
+                <a href={place.directionsUrl} target="_blank" rel="noreferrer" onClick={() => trackEvent("place_click", { place_id: place.id, action: "directions" })}>Directions ↗</a>
+                <a href={place.sourceUrl} target="_blank" rel="noreferrer" onClick={() => trackEvent("source_click", { source: "city_of_cda", place_id: place.id })}>City source ↗</a>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="section split-grid">
         <article className="info-card">
           <p className="eyebrow">SOURCE STATUS</p>
           <h2>What Lake Day knows</h2>
           <p><strong>Weather:</strong> {payload?.sources?.weather || "Open-Meteo"}</p>
           <p><strong>Air quality:</strong> {payload?.sources?.airQuality || "Pending"}</p>
-          <p><strong>Lake / boating alerts:</strong> {payload?.sources?.lakeAlerts === "not-connected" ? "Feed not connected yet" : payload?.sources?.lakeAlerts || "Pending"}</p>
-          <a href="https://open-meteo.com/" target="_blank" rel="noreferrer" onClick={() => trackEvent("source_click", { source: "open_meteo" })}>Open weather source ↗</a>
+          <p><strong>Automated lake alerts:</strong> Not connected yet.</p>
+          <div className="source-links">
+            <a href="https://open-meteo.com/" target="_blank" rel="noreferrer" onClick={() => trackEvent("source_click", { source: "open_meteo" })}>Weather source ↗</a>
+            <a href="https://www.kcsheriff.com/AlertCenter.aspx" target="_blank" rel="noreferrer" onClick={() => trackEvent("source_click", { source: "kootenai_alert_center" })}>Kootenai alerts ↗</a>
+            <a href="https://kcsheriff.com/31/Operations-Bureau" target="_blank" rel="noreferrer" onClick={() => trackEvent("source_click", { source: "kootenai_marine" })}>Marine Patrol ↗</a>
+          </div>
         </article>
         <article className="info-card warning-card">
           <p className="eyebrow">SAFETY NOTE</p>
@@ -179,8 +191,8 @@ export default function Home() {
 
       <section className="section coming-next">
         <p className="eyebrow">NEXT LAYER</p>
-        <h2>Places are coming next.</h2>
-        <p>Beaches, boat launches, lake notices, webcams and water temperature are already in the MVP backlog.</p>
+        <h2>Water data + webcams.</h2>
+        <p>Next up: reliable water temperature, lake level, live webcams and a stronger boating-notice layer.</p>
       </section>
 
       <footer>Lake Day · An AeroVista Local utility · Coeur d&apos;Alene, Idaho</footer>
