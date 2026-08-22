@@ -4,7 +4,7 @@ Updated: 2026-08-21
 
 ## Status
 
-**ACTIVE BUILD · MVP SLICE 1 IN SOURCE**
+**ACTIVE BUILD · MVP SLICE 2 IN SOURCE**
 
 ## Working now
 
@@ -24,18 +24,22 @@ Updated: 2026-08-21
 - Safe failure mode: no recommendation if primary live weather is unavailable
 - Share flow
 - Explicit source status
+- Verified local place directory with City of Coeur d'Alene sources
+- 3rd Street Boat Ramp with current City-listed launch notes/fees
+- Independence Point beach / swim area
+- Atlas Mill Park accessible swim / kayak launch
+- Direct Kootenai County Alert Center and Marine Patrol safety-source links
 - 1200×630 OpenGraph image
 - Production-domain + separate-Umami environment contract
 
 ## Intentionally incomplete
 
-- Verified boating / lake alert feed
+- Automated boating / lake alert ingestion
 - Water temperature
 - Lake level
-- Beach directory
-- Boat launch directory
-- Launch closures / status
+- Launch closures / status automation
 - Webcams
+- More beaches / launches beyond the initial verified set
 - Per-activity deep links
 - PWA/installability
 - Dedicated Umami website ID
@@ -43,17 +47,17 @@ Updated: 2026-08-21
 
 ## Next slice
 
-**Places + official notice layer**
+**Water data + stronger notice layer**
 
-1. Identify durable official boating / lake-notice sources.
-2. Add beaches and public launches with source URLs and directions.
-3. Add last-verified timestamps for each non-weather data source.
-4. Add source-aware degraded states so missing lake notices never appear as “all clear.”
-5. Add activity-specific place suggestions.
+1. Find a durable water-temperature source.
+2. Find a reliable lake-level source.
+3. Determine whether Kootenai alerts / marine notices expose a stable machine-readable feed; if not, keep them source links rather than scraping fragile HTML.
+4. Add webcams where the provider permits direct linking/embedding.
+5. Add activity-specific place suggestions and per-activity share/deep links.
 
 ## Launch blockers
 
-- Must connect a verified official alert / notice source or clearly ship without an alert claim.
+- Automated alerts may remain out of MVP only if the UI continues to state clearly that no automated lake-alert feed is connected.
 - Must create separate Umami site ID.
 - Must deploy to Vercel and connect `lakeday.aerovista.us`.
 - Must pass mobile QA and Meta Sharing Debugger.
