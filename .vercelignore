@@ -1,0 +1,9 @@
+# Repository-only material
+README.md
+docs/
+.env.example
+
+# Legacy static artwork is not referenced by the app.
+# Social previews are generated dynamically at /opengraph-image.
+public/lakeday_logo.png
+public/lakeday_preview.png
